@@ -3,6 +3,7 @@ from lib import DQN
 import model_make
 
 dqn = DQN.load(model_make.full_path)
+dqn.is_learning = False
 env = lib.Environment()
 
 for i in range(5):
