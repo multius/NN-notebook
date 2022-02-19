@@ -80,7 +80,12 @@ class DQN(object):
     # 动作选择函数
     def choose_action(self, x):                                         
         x = torch.unsqueeze(torch.FloatTensor(x), 0)                    # 将x转换成32-bit floating point形式，并在dim=0增加维数为1的维度
-        if self.is_learning and np.random.uniform() < EPSILON:          # 生成一个在[0, 1)内的随机数，如果小于EPSILON，选择最优动作
+        if self.is_learning:
+            random_number = np.random.uniform()                         # 生成一个在[0, 1)内的随机数
+        else:
+            random_number = 0.0
+
+        if random_number < EPSILON:                                     # 如果随机数小于EPSILON，选择最优动作
             actions_value = self.eval_net.forward(x)                    # 使用主网络获取各个动作的价值
             action = torch.max(actions_value, 1)[1].item()              # 输出最大值的索引
         else:
@@ -140,6 +145,7 @@ class DQN(object):
     # 加载模型
     def load(path):
         model = torch.load(path)
+        print("Load DQN-model from", path)
         return model
 
 # 环境装饰器
