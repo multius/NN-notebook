@@ -105,24 +105,25 @@ class DQN(object):
         self.optimizer.step()                                           # 更新评估网络的所有参数
 
     # 使DQN系统在环境中运行
-    def run_in(self, env, times = 500, need_history = True):
+    def run_in(self, env, times = 500, need_history = True, need_window = True):
         for episode in range(times):
             state = env.reset()                                         # 重置环境
             episode_reward_sum = 0                                      # 初始化该循环的总奖励
 
             while True:                                                 # 开始一个episode (每一个循环代表一步)
-                env.render()                                            # 显示实验动画
-                action = self.choose_action(state)                       # 输入该步对应的状态，选择动作
+                if need_window:
+                    env.render()                                        # 显示实验动画
+                action = self.choose_action(state)                      # 输入该步对应的状态，选择动作
                 next_state, reward, done, n_steps = env.step(action)    # 执行动作，获得反馈
 
-                self.memory.push(state, action, reward, next_state)      # 存储样本
+                self.memory.push(state, action, reward, next_state)     # 存储样本
                 episode_reward_sum += reward                            # 逐步累加该循环的总奖励
 
                 print("\r[ episode:{:>4} | steps:{:>5} | reward:{:>7.1f} ]".format(episode + 1, n_steps, episode_reward_sum), end = '')
 
                 state = next_state                                      # 更新环境信息
 
-                if self.is_learning and self.memory.is_full:              # 当DQN处于学习状态且记忆模块装满时开始学习
+                if self.is_learning and self.memory.is_full:            # 当DQN处于学习状态且记忆模块装满时开始学习
                     self.learn()
 
                 if done:
@@ -136,6 +137,7 @@ class DQN(object):
         torch.save(self, path)
         print("DQN-model has been saved to", path)
 
+    # 加载模型
     def load(path):
         model = torch.load(path)
         return model
