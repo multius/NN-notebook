@@ -66,8 +66,8 @@ class Memory(object):
         
         return b_state, b_action, b_reward, b_next_state
 
-# DQN类
-class DQN(object):
+# DDQN类
+class DDQN(object):
     def __init__(self):
         self.eval_net = QNet(N_STATES, N_ACTIONS)                       # 需要训练的主网络
         self.target_net = QNet(N_STATES, N_ACTIONS)                     # 辅助主网络训练的target net
@@ -100,11 +100,13 @@ class DQN(object):
 
         b_s, b_a, b_r, b_next_s = self.memory.sample(BATCH_SIZE)        # 数据抽样
 
-        q_eval = self.eval_net(b_s).gather(1, b_a)                      # 获取主网络对应动作价值
-        q_next = self.target_net(b_next_s).detach()                     # 获取target网络下一步的最优动作价值
-        q_target = b_r + GAMMA * q_next.max(1)[0].view(BATCH_SIZE, 1)   # 贝尔曼方程
+        q_eval = self.eval_net(b_s).gather(1, b_a)                      # 计算主网络对应动作价值
+        q_eval_next = self.eval_net(b_next_s).detach()                  # 计算主网络下一步的动作价值
+        a_next = q_eval_next.max(1)[1].unsqueeze(1)                     # 获取主网络下一步得最优动作
+        q_target_next = self.target_net(b_next_s).detach()              # 计算target对应最优动作的动作价值
+        q_max = b_r + GAMMA * q_target_next.gather(1, a_next)           # 贝尔曼方程
 
-        loss = self.lossf(q_eval, q_target)                             # 计算loss
+        loss = self.lossf(q_eval, q_max)                                # 计算loss
         self.optimizer.zero_grad()                                      # 清空上一步的残余更新参数值
         loss.backward()                                                 # 误差反向传播, 计算参数更新值
         self.optimizer.step()                                           # 更新评估网络的所有参数
