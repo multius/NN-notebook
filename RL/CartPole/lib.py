@@ -181,6 +181,6 @@ class Environment():
 
 
 if __name__ == '__main__':
-    dqn = DQN()
+    dqn = DDQN()
     env = Environment()
     dqn.run_in(env)
